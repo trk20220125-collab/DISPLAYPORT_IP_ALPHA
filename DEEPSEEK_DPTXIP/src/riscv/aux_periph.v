@@ -20,7 +20,18 @@ module aux_periph (
     input  wire [31:0] cpu_addr,
     input  wire [31:0] cpu_wdata,
     input  wire [3:0]  cpu_wstrb,
-    output reg  [31:0] cpu_rdata
+    output reg  [31:0] cpu_rdata,
+
+    // AUX PHY interface
+    output reg         phy_tx_start,
+    output reg  [7:0]  phy_tx_data,
+    output reg         phy_tx_last,
+    input  wire        phy_tx_ready,
+    input  wire        phy_tx_done,
+    input  wire        phy_rx_valid,
+    input  wire [7:0]  phy_rx_data,
+    input  wire        phy_rx_last,
+    input  wire        phy_rx_err
 );
 
     reg  req_pending;
@@ -158,9 +169,9 @@ module aux_periph (
                 if (cpu_addr[11:8] == 4'h1) begin
                     if (cpu_wstrb != 4'b0000) begin
                         if (cpu_wstrb[0]) dpcd_mem[cpu_addr[7:0]] <= cpu_wdata[7:0];
-                        if (cpu_wstrb[1]) dpcd_mem[cpu_addr[7:0]] <= cpu_wdata[15:8];
-                        if (cpu_wstrb[2]) dpcd_mem[cpu_addr[7:0]] <= cpu_wdata[23:16];
-                        if (cpu_wstrb[3]) dpcd_mem[cpu_addr[7:0]] <= cpu_wdata[31:24];
+                        if (cpu_wstrb[1]) dpcd_mem[cpu_addr[7:0] + 8'h01] <= cpu_wdata[15:8];
+                        if (cpu_wstrb[2]) dpcd_mem[cpu_addr[7:0] + 8'h02] <= cpu_wdata[23:16];
+                        if (cpu_wstrb[3]) dpcd_mem[cpu_addr[7:0] + 8'h03] <= cpu_wdata[31:24];
                     end
                     cpu_rdata <= dpcd_mem[cpu_addr[7:0]];
                 end

@@ -23,7 +23,8 @@ module ram #(
             if (mem_wstrb[2]) mem[word_addr][23:16] <= mem_wdata[23:16];
             if (mem_wstrb[3]) mem[word_addr][31:24] <= mem_wdata[31:24];
         end
-        mem_rdata <= mem[word_addr];
+        if (mem_valid)
+            mem_rdata <= mem[word_addr];
     end
 
     initial begin

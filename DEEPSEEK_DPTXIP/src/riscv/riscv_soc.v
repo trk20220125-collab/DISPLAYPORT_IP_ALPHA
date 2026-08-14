@@ -13,7 +13,18 @@ module riscv_soc (
     output wire        aux_resp_valid,
     output wire        aux_resp_ack,
     output wire [7:0]  aux_resp_data,
-    output wire [7:0]  aux_resp_code
+    output wire [7:0]  aux_resp_code,
+
+    // AUX PHY interface
+    output wire        phy_tx_start,
+    output wire [7:0]  phy_tx_data,
+    output wire        phy_tx_last,
+    input  wire        phy_tx_ready,
+    input  wire        phy_tx_done,
+    input  wire        phy_rx_valid,
+    input  wire [7:0]  phy_rx_data,
+    input  wire        phy_rx_last,
+    input  wire        phy_rx_err
 );
 
     // PicoRV32 memory interface
@@ -28,6 +39,7 @@ module riscv_soc (
     // Peripheral interface
     wire        periph_valid;
     wire [31:0] periph_rdata;
+    wire [31:0] ram_rdata;
 
     // Address decoding
     wire ram_sel    = (mem_addr[31:28] == 4'h0);   // 0x00000000 - 0x0FFFFFFF
@@ -65,8 +77,6 @@ module riscv_soc (
         .mem_rdata  (mem_rdata)
     );
 
-    wire [31:0] ram_rdata;
-
     ram #(
         .AW(13)
     ) firmware_ram (
@@ -98,7 +108,17 @@ module riscv_soc (
         .cpu_addr        (mem_addr),
         .cpu_wdata       (mem_wdata),
         .cpu_wstrb       (mem_wstrb),
-        .cpu_rdata       (periph_rdata)
+        .cpu_rdata       (periph_rdata),
+        // PHY interface
+        .phy_tx_start    (phy_tx_start),
+        .phy_tx_data     (phy_tx_data),
+        .phy_tx_last     (phy_tx_last),
+        .phy_tx_ready    (phy_tx_ready),
+        .phy_tx_done     (phy_tx_done),
+        .phy_rx_valid    (phy_rx_valid),
+        .phy_rx_data     (phy_rx_data),
+        .phy_rx_last     (phy_rx_last),
+        .phy_rx_err      (phy_rx_err)
     );
 
 endmodule

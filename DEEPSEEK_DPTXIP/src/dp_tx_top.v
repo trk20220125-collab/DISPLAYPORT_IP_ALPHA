@@ -1,5 +1,6 @@
 module dp_tx_top (
-    input  wire        clk,          // byte clock (link domain)
+    input  wire        clk,          // byte clock (link domain, 270 MHz)
+    input  wire        gt_refclk,    // GT reference clock (e.g., 135 MHz)
     input  wire        pixel_clk,    // pixel clock (video domain)
     input  wire        rst_n,
     input  wire [23:0] pixel_in,
@@ -29,7 +30,12 @@ module dp_tx_top (
     output wire        aux_resp_valid,
     output wire        aux_resp_ack,
     output wire [7:0]  aux_resp_data,
-    output wire [7:0]  aux_resp_code
+    output wire [7:0]  aux_resp_code,
+    output wire        pixel_ready,
+
+    // AUX PHY differential pins
+    inout  wire        aux_p,
+    inout  wire        aux_n
 );
 
     wire [7:0] packed_byte;
@@ -55,13 +61,15 @@ module dp_tx_top (
     wire [23:0] fifo_pixel;
     wire        fifo_sof;
     wire        fifo_empty;
+    wire        fifo_full;
     wire        packer_pixel_ready;
     wire        pixel_consumed;
 
     assign pixel_consumed = packer_pixel_ready && !fifo_empty;
+    assign pixel_ready = !fifo_full;
 
     reg [15:0] h_count, v_count;
-    reg        in_vblank, prev_vblank;
+    reg        in_vblank, prev_vblank, prev_blanking;
     wire       blanking;
     wire       msa_trig;
 
@@ -100,15 +108,23 @@ module dp_tx_top (
             prev_vblank <= in_vblank;
     end
 
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            prev_blanking <= 1'b0;
+        else if (pixel_consumed)
+            prev_blanking <= blanking;
+    end
+
     assign blanking = (h_count >= h_active);
-    assign msa_trig = in_vblank && !prev_vblank;
+    // Fire MSA on first horizontal blanking edge after vblank entry
+    assign msa_trig = blanking && !prev_blanking && in_vblank;
 
     dp_tx_pixel_fifo #(.WIDTH(25)) fifo (
         .wr_clk    (pixel_clk),
         .wr_rst_n  (rst_n),
-        .wr_en     (pixel_valid),
+        .wr_en     (pixel_valid && !fifo_full),
         .wr_data   ({pixel_sof, pixel_in[23:0]}),
-        .full      (),
+        .full      (fifo_full),
         .rd_clk    (clk),
         .rd_rst_n  (rst_n),
         .rd_en     (pixel_consumed),
@@ -178,6 +194,26 @@ module dp_tx_top (
         .scrambler_rst (scrambler_rst)
     );
 
+    wire        aux_phy_tx_start;
+    wire [7:0]  aux_phy_tx_data;
+    wire        aux_phy_tx_last;
+    wire        aux_phy_tx_ready;
+    wire        aux_phy_tx_done;
+    wire        aux_phy_rx_valid;
+    wire [7:0]  aux_phy_rx_data;
+    wire        aux_phy_rx_last;
+    wire        aux_phy_rx_err;
+    wire        aux_clk_en;
+
+    // 1 MHz tick generator from 270 MHz clk
+    reg [8:0] aux_clk_div;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) aux_clk_div <= 0;
+        else if (aux_clk_div == 269) aux_clk_div <= 0;
+        else aux_clk_div <= aux_clk_div + 1;
+    end
+    assign aux_clk_en = (aux_clk_div == 269);
+
     riscv_soc riscv_aux_ctrl (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -191,7 +227,34 @@ module dp_tx_top (
         .aux_resp_valid  (aux_resp_valid),
         .aux_resp_ack    (aux_resp_ack),
         .aux_resp_data   (aux_resp_data),
-        .aux_resp_code   (aux_resp_code)
+        .aux_resp_code   (aux_resp_code),
+        // PHY interface
+        .phy_tx_start    (aux_phy_tx_start),
+        .phy_tx_data     (aux_phy_tx_data),
+        .phy_tx_last     (aux_phy_tx_last),
+        .phy_tx_ready    (aux_phy_tx_ready),
+        .phy_tx_done     (aux_phy_tx_done),
+        .phy_rx_valid    (aux_phy_rx_valid),
+        .phy_rx_data     (aux_phy_rx_data),
+        .phy_rx_last     (aux_phy_rx_last),
+        .phy_rx_err      (aux_phy_rx_err)
+    );
+
+    dp_tx_aux_phy aux_phy_inst (
+        .sys_clk       (clk),
+        .sys_rst_n     (rst_n),
+        .aux_clk_en    (aux_clk_en),
+        .tx_start      (aux_phy_tx_start),
+        .tx_data       (aux_phy_tx_data),
+        .tx_last       (aux_phy_tx_last),
+        .tx_ready      (aux_phy_tx_ready),
+        .tx_done       (aux_phy_tx_done),
+        .rx_valid      (aux_phy_rx_valid),
+        .rx_data       (aux_phy_rx_data),
+        .rx_last       (aux_phy_rx_last),
+        .rx_err        (aux_phy_rx_err),
+        .aux_p         (aux_p),
+        .aux_n         (aux_n)
     );
 
     dp_tx_lane_mapper #(.LANE_COUNT(4)) lane_map (
@@ -208,17 +271,18 @@ module dp_tx_top (
     );
 
     dp_tx_phy_7series phy (
-        .clk       (clk),
-        .rst_n     (rst_n),
-        .tx_data   (lane_data),
-        .tx_k_mask (lane_k_mask),
-        .tx_valid  (lane_valid),
-        .tx_sof    (lane_sof),
-        .tx_code0  (tx_code0),
-        .tx_code1  (tx_code1),
-        .tx_code2  (tx_code2),
-        .tx_code3  (tx_code3),
-        .txp       (txp),
-        .txn       (txn)
+        .clk        (clk),
+        .gt_refclk  (refclk),
+        .rst_n      (rst_n),
+        .tx_data    (lane_data),
+        .tx_k_mask  (lane_k_mask),
+        .tx_valid   (lane_valid),
+        .tx_sof     (lane_sof),
+        .tx_code0   (tx_code0),
+        .tx_code1   (tx_code1),
+        .tx_code2   (tx_code2),
+        .tx_code3   (tx_code3),
+        .txp        (txp),
+        .txn        (txn)
     );
 endmodule

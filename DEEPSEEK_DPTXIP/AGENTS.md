@@ -9,10 +9,13 @@ src/
 ├── dp_tx_video_packer.v
 ├── dp_tx_pixel_fifo.v        # Async FIFO (pixel_clk → byte_clk domain crossing)
 ├── dp_tx_scrambler.v
+├── dp_tx_8b10b_enc.v         # Fabric 8b/10b encoder (per-lane, tracks disparity)
 ├── dp_tx_msa_gen.v
-├── dp_tx_stream_mux.v
+├── dp_tx_stream_mux.v        # Training/video stream select + scrambler_rst
 ├── dp_tx_lane_mapper.v
-├── dp_tx_phy_7series.v
+├── dp_tx_link_layer.v        # packer → scrambler → stream_mux chain wrapper
+├── dp_tx_clk_gen.v           # MMCM: 135 MHz ref → 270 MHz byte + 148.5 MHz pixel clk
+├── dp_tx_phy_7series.v       # GTXE2_CHANNEL wrapper (SIM vs SYNTH via __ICARUS__)
 └── riscv/                    # RISC-V AUX subsystem
     ├── picorv32.v            # RV32I core (native memory interface)
     ├── ram.v                 # Dual-port block RAM with firmware init
@@ -21,10 +24,15 @@ src/
     ├── firmware.S            # Assembly source for AUX handler
     ├── firmware.hex          # Compiled firmware binary
     ├── asm.py                # RV32I assembler
+    ├── gen_rom.py            # Generates ram.v mem[] init lines from firmware.hex
     ├── test_fw.py            # Python firmware emulation test
     └── simulate.py           # Full simulation runner
 tb/
-└── dp_tx_top_tb.v            # Testbench with AUX transaction tests
+├── dp_tx_top_tb.v            # Testbench with AUX transaction tests
+├── dp_tx_top_full_tb.v       # Full 1080p60 video + AUX testbench (xsim/iverilog)
+├── dp_tx_top_tb.vcd
+└── firmware.hex              # Copied hex for tb RAM init
+dp_tx_riscv_full.v            # Single-file pack: all RTL + testbench (SIM_QUIET)
 ```
 
 ## Building and Running
@@ -92,10 +100,14 @@ Add these files to your Vivado project:
 ```
 src/dp_tx_top.v
 src/dp_tx_video_packer.v
+src/dp_tx_pixel_fifo.v
 src/dp_tx_scrambler.v
+src/dp_tx_8b10b_enc.v
 src/dp_tx_msa_gen.v
 src/dp_tx_stream_mux.v
 src/dp_tx_lane_mapper.v
+src/dp_tx_link_layer.v
+src/dp_tx_clk_gen.v
 src/dp_tx_phy_7series.v
 src/riscv/picorv32.v
 src/riscv/ram.v
@@ -104,7 +116,9 @@ src/riscv/riscv_soc.v
 src/riscv/firmware.hex
 ```
 
-For synthesis, replace `$readmemh` in ram.v with block ROM initialized from firmware.hex.
+For the MMCM-based clock generator, run the Vivado Clocking Wizard instead of `dp_tx_clk_gen.v` to match your board's REFCLK; update the `GTXE2_CHANNEL` parameters accordingly. The `dp_tx_clk_gen.v` RTL is a reference instantiation (CLKOUT0 = 270 MHz byte clock, CLKOUT1 ≈ 148.5 MHz pixel clock from a 135 MHz ref).
+
+The firmware image is pre-embedded in `ram.v` as an `initial` block — regenerate it with `src/riscv/gen_rom.py` whenever you reassemble `firmware.S` (the hex is not auto-loaded via `$readmemh`).
 
 ## Memory Map
 

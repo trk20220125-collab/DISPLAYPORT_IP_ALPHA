@@ -39,7 +39,9 @@ def run_simulation(waves=False):
     src_files = [
         os.path.join(SRC_DIR, "dp_tx_top.v"),
         os.path.join(SRC_DIR, "dp_tx_video_packer.v"),
+        os.path.join(SRC_DIR, "dp_tx_pixel_fifo.v"),
         os.path.join(SRC_DIR, "dp_tx_scrambler.v"),
+        os.path.join(SRC_DIR, "dp_tx_8b10b_enc.v"),
         os.path.join(SRC_DIR, "dp_tx_msa_gen.v"),
         os.path.join(SRC_DIR, "dp_tx_stream_mux.v"),
         os.path.join(SRC_DIR, "dp_tx_lane_mapper.v"),

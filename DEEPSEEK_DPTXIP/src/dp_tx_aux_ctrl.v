@@ -21,8 +21,7 @@ module dp_tx_aux_ctrl (
     localparam RESP_DEFER = 8'h7E;
 
     localparam ST_IDLE = 2'd0;
-    localparam ST_WAIT = 2'd1;
-    localparam ST_REPLY = 2'd2;
+    localparam ST_REPLY = 2'd1;
 
     reg [1:0] state;
     reg [7:0] dpcd_mem [0:15];
@@ -77,10 +76,6 @@ module dp_tx_aux_ctrl (
                             state <= ST_REPLY;
                         end
                     end
-                end
-
-                ST_WAIT: begin
-                    state <= ST_REPLY;
                 end
 
                 ST_REPLY: begin

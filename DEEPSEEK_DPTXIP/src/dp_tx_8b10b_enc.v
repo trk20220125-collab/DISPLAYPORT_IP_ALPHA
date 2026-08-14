@@ -19,12 +19,15 @@ module dp_tx_8b10b_enc (
         four = 4'b0;
 
         if (is_k) begin
-            casez ({fgh, abcde})
-                8'b101_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1010 : 4'b0101; end
-                8'b?00_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1010 : 4'b0101; end
-                8'b?01_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1001 : 4'b0110; end
-                8'b?10_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b0101 : 4'b1010; end
-                8'b?11_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1100 : 4'b0011; end
+            case ({fgh, abcde})
+                8'b101_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1010 : 4'b0101; end  // K28.5
+                8'b000_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1010 : 4'b0101; end  // K28.0
+                8'b100_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1100 : 4'b0011; end  // K28.4
+                8'b001_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1001 : 4'b0110; end  // K28.1
+                8'b010_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b0101 : 4'b1010; end  // K28.2
+                8'b110_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1100 : 4'b0011; end  // K28.6
+                8'b011_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b1100 : 4'b0011; end  // K28.3
+                8'b111_11100: begin six = disp_in ? 6'b001111 : 6'b110000; four = disp_in ? 4'b0101 : 4'b1010; end  // K28.7
                 8'b000_11011: begin six = disp_in ? 6'b001110 : 6'b110001; four = 4'b1001; end
                 8'b001_11011: begin six = disp_in ? 6'b001110 : 6'b110001; four = 4'b0101; end
                 8'b010_11011: begin six = disp_in ? 6'b001110 : 6'b110001; four = 4'b1100; end

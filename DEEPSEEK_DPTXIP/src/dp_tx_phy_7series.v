@@ -1,5 +1,6 @@
 module dp_tx_phy_7series (
     input  wire        clk,           // byte clock (e.g., 270 MHz for HBR)
+    input  wire        gt_refclk,     // GT reference clock (e.g., 135 MHz)
     input  wire        rst_n,
     input  wire [31:0] tx_data,       // 4 bytes from lane mapper
     input  wire [3:0]  tx_k_mask,     // K-code flag per byte
@@ -72,9 +73,12 @@ module dp_tx_phy_7series (
     assign txp[3] = tx_code3[0];
     assign txn[3] = ~tx_code3[0];
 `else
+    // Add refclk input for GTX
+    input  wire        gt_refclk;
+
     reg gearbox_toggle;
-    reg [9:0] sym_odd[3:0];
-    reg [19:0] gtx_txdata[3:0];
+    reg [9:0] sym_odd0, sym_odd1, sym_odd2, sym_odd3;
+    reg [19:0] gtx_txdata0, gtx_txdata1, gtx_txdata2, gtx_txdata3;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -82,15 +86,15 @@ module dp_tx_phy_7series (
         end else if (tx_valid) begin
             gearbox_toggle <= ~gearbox_toggle;
             if (!gearbox_toggle) begin
-                sym_odd[0] <= tx_code0;
-                sym_odd[1] <= tx_code1;
-                sym_odd[2] <= tx_code2;
-                sym_odd[3] <= tx_code3;
+                sym_odd0 <= tx_code0;
+                sym_odd1 <= tx_code1;
+                sym_odd2 <= tx_code2;
+                sym_odd3 <= tx_code3;
             end else begin
-                gtx_txdata[0] <= {tx_code0[9:0], sym_odd[0]};
-                gtx_txdata[1] <= {tx_code1[9:0], sym_odd[1]};
-                gtx_txdata[2] <= {tx_code2[9:0], sym_odd[2]};
-                gtx_txdata[3] <= {tx_code3[9:0], sym_odd[3]};
+                gtx_txdata0 <= {tx_code0[9:0], sym_odd0};
+                gtx_txdata1 <= {tx_code1[9:0], sym_odd1};
+                gtx_txdata2 <= {tx_code2[9:0], sym_odd2};
+                gtx_txdata3 <= {tx_code3[9:0], sym_odd3};
             end
         end
     end
@@ -118,6 +122,12 @@ module dp_tx_phy_7series (
     generate
         for (l = 0; l < 4; l = l + 1) begin : gtx_lane
             wire lane_txp, lane_txn;
+            wire [19:0] lane_txdata;
+
+            // Mux the txdata for generate block
+            assign lane_txdata = (l == 0) ? gtx_txdata0 :
+                                 (l == 1) ? gtx_txdata1 :
+                                 (l == 2) ? gtx_txdata2 : gtx_txdata3;
 
             GTXE2_CHANNEL #(
                 .TX_DATA_WIDTH(20),
@@ -130,13 +140,13 @@ module dp_tx_phy_7series (
                 .SIM_GTRESET_SPEEDUP("TRUE"),
                 .SIM_TX_RESET_SPEEDUP("TRUE")
             ) gtx_inst (
-                .GTREFCLK0    (clk),
+                .GTREFCLK0    (gt_refclk),
                 .GTREFCLK1    (1'b0),
                 .TXPD         (2'b00),
                 .TXSYSCLKSEL  (2'b01),
                 .TXUSRCLK     (gtx_txusrclk2),
                 .TXUSRCLK2    (gtx_txusrclk2),
-                .TXDATA       (gtx_txdata[l]),
+                .TXDATA       (lane_txdata),
                 .TXBYPASS8B10B({2{1'b1}}),
                 .TXCHARDISPMODE(2'b00),
                 .TXCHARDISPVAL (2'b00),

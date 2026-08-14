@@ -65,7 +65,7 @@ module picorv32 #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pc           <= 32'h00000000;
-            next_pc      =  32'h00000004;
+            next_pc      <= 32'h00000004;
             ir           <= 32'h00000000;
             reg_rd_we    <= 1'b0;
             alu_out_valid <= 1'b0;
@@ -161,7 +161,7 @@ module picorv32 #(
                             reg_rd_addr <= rd_addr;
                             reg_rd_data <= pc + 4;
                             reg_rd_we <= |rd_addr;
-                            next_pc = (rs1 + imm_i) & ~32'h00000001;
+                            next_pc = (rs1 + imm_i) & ~32'h00000003;
                         end
 
                         // BEQ
@@ -176,12 +176,12 @@ module picorv32 #(
 
                         // BLT
                         32'b?????????????????_100_?????_1100011: begin
-                            next_pc <= ($signed(rs1) < $signed(rs2)) ? pc + imm_b : pc + 4;
+                            next_pc = ($signed(rs1) < $signed(rs2)) ? pc + imm_b : pc + 4;
                         end
 
                         // BGE
                         32'b?????????????????_101_?????_1100011: begin
-                            next_pc <= ($signed(rs1) >= $signed(rs2)) ? pc + imm_b : pc + 4;
+                            next_pc = ($signed(rs1) >= $signed(rs2)) ? pc + imm_b : pc + 4;
                         end
 
                         // BLTU

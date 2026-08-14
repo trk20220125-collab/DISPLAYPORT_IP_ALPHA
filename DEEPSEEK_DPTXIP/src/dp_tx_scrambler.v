@@ -37,7 +37,7 @@ module dp_tx_scrambler (
         begin
             t = s;
             for (i = 0; i < 8; i = i + 1)
-                t = {t[14:0], t[15] ^ t[4] ^ t[3] ^ t[2]};
+                t = {t[14:0], t[15] ^ t[13] ^ t[12] ^ t[10]};
             lfsr_next = t;
         end
     endfunction

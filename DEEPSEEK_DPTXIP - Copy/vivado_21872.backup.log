@@ -1,0 +1,29 @@
+#-----------------------------------------------------------
+# Vivado v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Wed Aug  5 16:45:53 2026
+# Process ID         : 21872
+# Current directory  : C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy
+# Command line       : vivado.exe -mode batch -source C:\Users\User\Downloads\DEEPSEEK_DPTXIP - Copy\vivado_pack_test.tcl
+# Log file           : C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado.log
+# Journal file       : C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy\vivado.jou
+# Running On         : DESKTOP-T74PT7D
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26100
+# Processor Detail   : Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz
+# CPU Frequency      : 2904 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 34153 MB
+# Swap memory        : 34153 MB
+# Total Virtual      : 68306 MB
+# Available Virtual  : 53146 MB
+#-----------------------------------------------------------
+source {C:\Users\User\Downloads\DEEPSEEK_DPTXIP - Copy\vivado_pack_test.tcl}
+# create_project dp_tx_pack_test "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_pack" -part xc7k325tffg900-2 -force
+create_project: Time (s): cpu = 00:00:09 ; elapsed = 00:00:10 . Memory (MB): peak = 533.867 ; gain = 221.844
+# add_files "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/dp_tx_riscv_full.v"
+ERROR: [Vivado 12-172] File or Directory 'C:/Users/User/Downloads/DEEPSEEK_DPTXIP' does not exist
+INFO: [Common 17-206] Exiting Vivado at Wed Aug  5 16:46:11 2026...

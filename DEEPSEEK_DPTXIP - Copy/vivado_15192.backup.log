@@ -1,0 +1,236 @@
+#-----------------------------------------------------------
+# Vivado v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Wed Aug  5 13:15:45 2026
+# Process ID         : 15192
+# Current directory  : C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy
+# Command line       : vivado.exe -mode batch -source C:\Users\User\Downloads\DEEPSEEK_DPTXIP - Copy\vivado_sim.tcl
+# Log file           : C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado.log
+# Journal file       : C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy\vivado.jou
+# Running On         : DESKTOP-T74PT7D
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26100
+# Processor Detail   : Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz
+# CPU Frequency      : 2904 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 34153 MB
+# Swap memory        : 34153 MB
+# Total Virtual      : 68306 MB
+# Available Virtual  : 58718 MB
+#-----------------------------------------------------------
+source {C:\Users\User\Downloads\DEEPSEEK_DPTXIP - Copy\vivado_sim.tcl}
+# set proj_dir "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_proj2"
+# set src_dir  "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src"
+# set tb_dir   "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/tb"
+# create_project dp_tx_sim $proj_dir -part xc7k325tffg900-2 -force
+create_project: Time (s): cpu = 00:00:10 ; elapsed = 00:00:11 . Memory (MB): peak = 531.738 ; gain = 220.133
+# set_property simulator_language Verilog [current_project]
+# set_property target_language    Verilog [current_project]
+# add_files [glob $src_dir/*.v]
+# add_files [glob $src_dir/riscv/*.v]
+# add_files -fileset sim_1 [glob $tb_dir/dp_tx_top_full_tb.v]
+# add_files -fileset sim_1 [glob $tb_dir/dp_tx_top_tb.v]
+# set_property top dp_tx_top_full_tb [get_filesets sim_1]
+# set_property top_lib xil_defaultlib [get_filesets sim_1]
+# set_property -name {xsim.compile.xvlog.more_options} -value {-d __ICARUS__ -d SIM_QUIET} -objects [get_filesets sim_1]
+# set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets sim_1]
+# launch_simulation -mode behavioral
+Command: launch_simulation  -mode behavioral
+INFO: [Vivado 12-25911] Executing simulation for 'XSim' simulator
+INFO: [Vivado 12-28535] Process started - Wed Aug  5 13:16:03 2026
+
+INFO: [Vivado 12-12493] Simulation top is 'dp_tx_top_full_tb'
+INFO: [Vivado 12-5682] Launching behavioral simulation in 'C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_proj2/dp_tx_sim.sim/sim_1/behav/xsim'
+INFO: [SIM-utils-51] Simulation object is 'sim_1'
+INFO: [SIM-utils-72] Using boost library from 'C:/AMDDesignTools/2025.2/Vivado/tps/boost_1_72_0'
+INFO: [SIM-utils-54] Inspecting design source files for 'dp_tx_top_full_tb' in fileset 'sim_1'...
+INFO: [USF-XSim-97] Finding global include files...
+INFO: [USF-XSim-98] Fetching design files from 'sim_1'...
+INFO: [USF-XSim-2] XSim::Compile design
+INFO: [USF-XSim-61] Executing 'COMPILE and ANALYZE' step in 'C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_proj2/dp_tx_sim.sim/sim_1/behav/xsim'
+"xvlog --incr --relax -d __ICARUS__ -d SIM_QUIET -prj dp_tx_top_full_tb_vlog.prj"
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/aux_periph.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module aux_periph
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_8b10b_enc.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_8b10b_enc
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_lane_mapper.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_lane_mapper
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_msa_gen.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_msa_gen
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_phy_7series.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_phy_7series
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_pixel_fifo.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_pixel_fifo
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_scrambler.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_scrambler
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_stream_mux.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_stream_mux
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_top.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_top
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_video_packer.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dp_tx_video_packer
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/picorv32.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module picorv32
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/ram.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module ram
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/riscv_soc.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module riscv_soc
+WARNING: [VRFC 10-3380] identifier 'ram_rdata' is used before its declaration [C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/riscv_soc.v:51]
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/tb/dp_tx_top_full_tb.v" into library xil_defaultlib
+WARNING: [VRFC 10-3381] ignoring re-definition of command line macro '__ICARUS__' [C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/tb/dp_tx_top_full_tb.v:3]
+INFO: [VRFC 10-311] analyzing module dp_tx_top_full_tb
+INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_proj2/dp_tx_sim.sim/sim_1/behav/xsim/glbl.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module glbl
+INFO: [USF-XSim-69] 'compile' step finished in '3' seconds
+INFO: [USF-XSim-3] XSim::Elaborate design
+INFO: [USF-XSim-61] Executing 'ELABORATE' step in 'C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_proj2/dp_tx_sim.sim/sim_1/behav/xsim'
+"xelab --incr --debug typical --relax --mt 2 -L xil_defaultlib -L unisims_ver -L unimacro_ver -L secureip --snapshot dp_tx_top_full_tb_behav xil_defaultlib.dp_tx_top_full_tb xil_defaultlib.glbl -log elaborate.log"
+Vivado Simulator v2025.2
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: C:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe --incr --debug typical --relax --mt 2 -L xil_defaultlib -L unisims_ver -L unimacro_ver -L secureip --snapshot dp_tx_top_full_tb_behav xil_defaultlib.dp_tx_top_full_tb xil_defaultlib.glbl -log elaborate.log 
+Using 2 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_top.v" Line 1. Module dp_tx_top doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_pixel_fifo.v" Line 1. Module dp_tx_pixel_fifo(WIDTH=25) doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_video_packer.v" Line 1. Module dp_tx_video_packer doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_scrambler.v" Line 1. Module dp_tx_scrambler doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_msa_gen.v" Line 1. Module dp_tx_msa_gen doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_stream_mux.v" Line 1. Module dp_tx_stream_mux doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/riscv_soc.v" Line 1. Module riscv_soc doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/picorv32.v" Line 1. Module picorv32 doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/ram.v" Line 1. Module ram_default doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/riscv/aux_periph.v" Line 1. Module aux_periph doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_lane_mapper.v" Line 1. Module dp_tx_lane_mapper doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_phy_7series.v" Line 1. Module dp_tx_phy_7series doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_8b10b_enc.v" Line 1. Module dp_tx_8b10b_enc doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_8b10b_enc.v" Line 1. Module dp_tx_8b10b_enc doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_8b10b_enc.v" Line 1. Module dp_tx_8b10b_enc doesn't have a timescale but at least one module in design has a timescale.
+WARNING: [XSIM 43-4099] "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/src/dp_tx_8b10b_enc.v" Line 1. Module dp_tx_8b10b_enc doesn't have a timescale but at least one module in design has a timescale.
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module xil_defaultlib.dp_tx_pixel_fifo(WIDTH=25)
+Compiling module xil_defaultlib.dp_tx_video_packer
+Compiling module xil_defaultlib.dp_tx_scrambler
+Compiling module xil_defaultlib.dp_tx_msa_gen
+Compiling module xil_defaultlib.dp_tx_stream_mux
+Compiling module xil_defaultlib.picorv32
+Compiling module xil_defaultlib.ram_default
+Compiling module xil_defaultlib.aux_periph
+Compiling module xil_defaultlib.riscv_soc
+Compiling module xil_defaultlib.dp_tx_lane_mapper
+Compiling module xil_defaultlib.dp_tx_8b10b_enc
+Compiling module xil_defaultlib.dp_tx_phy_7series
+Compiling module xil_defaultlib.dp_tx_top
+Compiling module xil_defaultlib.dp_tx_top_full_tb
+Compiling module xil_defaultlib.glbl
+Built simulation snapshot dp_tx_top_full_tb_behav
+run_program: Time (s): cpu = 00:00:00 ; elapsed = 00:00:07 . Memory (MB): peak = 539.688 ; gain = 0.000
+INFO: [USF-XSim-69] 'elaborate' step finished in '7' seconds
+INFO: [USF-XSim-4] XSim::Simulate design
+INFO: [USF-XSim-61] Executing 'SIMULATE' step in 'C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/vivado_proj2/dp_tx_sim.sim/sim_1/behav/xsim'
+INFO: [USF-XSim-98] *** Running xsim
+   with args "dp_tx_top_full_tb_behav -key {Behavioral:sim_1:Functional:dp_tx_top_full_tb} -tclbatch {dp_tx_top_full_tb.tcl} -log {simulate.log}"
+INFO: [USF-XSim-8] Loading simulator feature
+Time resolution is 1 ps
+source dp_tx_top_full_tb.tcl
+## set curr_wave [current_wave_config]
+## if { [string length $curr_wave] == 0 } {
+##   if { [llength [get_objects]] > 0} {
+##     add_wave /
+##     set_property needs_save false [current_wave_config]
+##   } else {
+##      send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
+##   }
+## }
+## run all
+
+============================================
+  DP TX + RISC-V AUX - Comprehensive TB
+============================================
+
+--- Phase 1: Reset & Initialization ---
+  [PASS] Test 1 DPCD[0x00] == 0x01 after reset
+  [PASS] Test 1 DPCD[0x00] readback == 0x01
+  [PASS] Test 2 DPCD[0x01] == 0x02 after reset
+  [PASS] Test 3 DPCD[0x02] == 0x03 after reset
+  [PASS] Test 4 DPCD[0x03] == 0x04 after reset
+  [PASS] Test 5 4] == 0x00 after reset (default)
+
+--- Phase 2: DPCD Write/Read-back ---
+  [PASS] Test 6 Write DPCD[0x05]=0xAA ACK
+  [PASS] Test 7 Read DPCD[0x05] == 0xAA
+  [PASS] Test 8 Write DPCD[0x10]=0x55 ACK
+  [PASS] Test 9 Read DPCD[0x10] == 0x55
+  [PASS] Test 10 Write DPCD[0xFF]=0xBB ACK
+  [PASS] Test 11 Read DPCD[0xFF] == 0xBB
+  [PASS] Test 12 Overwrite DPCD[0x00]=0xCC ACK
+  [PASS] Test 13 Read DPCD[0x00] == 0xCC
+
+--- Phase 3: Back-to-Back AUX Transactions ---
+  [PASS] Test 14 3x back-to-back writes completed
+  [PASS] Test 15 Read DPCD[0x20] == 0x11
+  [PASS] Test 16 Read DPCD[0x21] == 0x22
+  [PASS] Test 17 Read DPCD[0x22] == 0x33
+
+--- Phase 4: Unknown Opcode NACK ---
+  [PASS] Test 18  0xFF -> NACK (ack=0, code=0x5A)
+  [PASS] Test 19 Opcode 0x03 -> NACK
+  [PASS] Test 20 Opcode 0x80 -> NACK
+
+--- Phase 5: DPCD Boundary Addresses ---
+  [PASS] Test 21 DPCD[0x80] == 0xDE
+  [PASS] Test 22 DPCD[0xC0] == 0xAD
+
+--- Phase 6: DPCD Multi-byte Write Pattern ---
+  [PASS] Test 23 8x sequential writes 0xA0..0xA7
+  [PASS] Test 24 D[0x40..0x47] readback all match
+
+--- Phase 7: Color Bar Video Streaming ---
+  Generating 75% color bars (10 lines x 1920 pixels)...
+  Bars: White | Yellow | Cyan | Green | Magenta | Red | Blue | Black
+  [VIDEO] Start color bar feed at time=84525000
+  [AUX] Write DPCD[0x60]=0xF1 during video
+  [AUX] Read  DPCD[0x60] during video
+  [AUX] Write DPCD[0x61]=0xF2 during video
+  [AUX] Read  DPCD[0x61] during video
+  [AUX] NACK opcode 0x05 during video
+  [VIDEO] Done  color bar feed at time=391724000
+  [PASS] Test 25 nes streamed with concurrent AUX
+  [VIDEO] All done at time=391724000
+  [PASS] Test 26 DPCD[0x60] == 0xF1 after video
+  [PASS] Test 27 DPCD[0x61] == 0xF2 after video
+
+--- Phase 8: PHY 8b/10b Output Monitor ---
+  [PASS] Test 28  lane outputs toggle (not stuck)
+
+--- Phase 9: AUX Response Code Validation ---
+  [PASS] Test 29 Write ACK code == 0xA5
+  [PASS] Test 30 d ACK code == 0xA5, data == 0x99
+
+--- Phase 10: Repeated Write/Read Same Address ---
+  [PASS] Test 31 [0x70] == 0x03 (last write wins)
+
+--- Phase 11: Pixel FIFO Backpressure ---
+  [PASS] Test 32 FIFO backpressure test completed
+
+--- Phase 12: Simultaneous Read & Write ---
+  [PASS] Test 33 ent read/write paths operational
+
+============================================
+  RESULTS: 34 PASSED, 0 FAILED
+============================================
+
+*** ALL TESTS PASSED ***
+
+$finish called at time : 439185 ns : File "C:/Users/User/Downloads/DEEPSEEK_DPTXIP - Copy/tb/dp_tx_top_full_tb.v" Line 612
+INFO: [USF-XSim-96] XSim completed. Design snapshot 'dp_tx_top_full_tb_behav' loaded.
+INFO: [USF-XSim-97] XSim simulation ran for all
+launch_simulation: Time (s): cpu = 00:00:00 ; elapsed = 00:00:18 . Memory (MB): peak = 539.688 ; gain = 7.949
+# run -all

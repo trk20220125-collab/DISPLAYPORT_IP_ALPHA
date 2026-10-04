@@ -1,6 +1,6 @@
 // =============================================================================
 // Clock Generator: 135 MHz reference -> 270 MHz byte clock + 148.5 MHz pixel clock
-// Uses Xilinx MMCM (Kintex-7 / Artix-7)
+// Uses Xilinx MMCM (Kintex-7)
 // =============================================================================
 
 module dp_tx_clk_gen (
@@ -16,7 +16,7 @@ module dp_tx_clk_gen (
     wire clk_148_5;
     wire locked_i;
 
-    // MMCM_BASE for Kintex-7 / Artix-7
+    // MMCM_BASE for Kintex-7
     // VCO = 135 MHz × 11 = 1485 MHz (within 600-1600 MHz range)
     //   CLKOUT0 = 1485/5.5 = 270 MHz  (byte clock, exact)
     //   CLKOUT1 = 1485/10  = 148.5 MHz (pixel clock, exact)

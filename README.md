@@ -1,6 +1,6 @@
 # DisplayPort TX IP
 
-A Verilog-based DisplayPort TX IP scaffold for 7-series devices (Artix-7 / Kintex-7) with:
+A Verilog-based DisplayPort TX IP scaffold for Kintex-7 (7-series) with:
 
 - 4-lane TX architecture (DP 1.2 HBR2-oriented data path)
 - RISC-V soft-core AUX transaction controller (PicoRV32 + DPCD peripheral)

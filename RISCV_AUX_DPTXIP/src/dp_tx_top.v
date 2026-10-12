@@ -203,16 +203,6 @@ module dp_tx_top (
     wire [7:0]  aux_phy_rx_data;
     wire        aux_phy_rx_last;
     wire        aux_phy_rx_err;
-    wire        aux_clk_en;
-
-    // 1 MHz tick generator from 270 MHz clk
-    reg [8:0] aux_clk_div;
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) aux_clk_div <= 0;
-        else if (aux_clk_div == 269) aux_clk_div <= 0;
-        else aux_clk_div <= aux_clk_div + 1;
-    end
-    assign aux_clk_en = (aux_clk_div == 269);
 
     riscv_soc riscv_aux_ctrl (
         .clk             (clk),
@@ -243,7 +233,6 @@ module dp_tx_top (
     dp_tx_aux_phy aux_phy_inst (
         .sys_clk       (clk),
         .sys_rst_n     (rst_n),
-        .aux_clk_en    (aux_clk_en),
         .tx_start      (aux_phy_tx_start),
         .tx_data       (aux_phy_tx_data),
         .tx_last       (aux_phy_tx_last),
@@ -272,7 +261,7 @@ module dp_tx_top (
 
     dp_tx_phy_7series phy (
         .clk        (clk),
-        .gt_refclk  (refclk),
+        .gt_refclk  (gt_refclk),
         .rst_n      (rst_n),
         .tx_data    (lane_data),
         .tx_k_mask  (lane_k_mask),

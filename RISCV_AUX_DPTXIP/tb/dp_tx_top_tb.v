@@ -37,6 +37,10 @@ module dp_tx_top_tb;
     wire [7:0] aux_resp_data;
     wire [7:0] aux_resp_code;
 
+    // AUX PHY pins
+    wire aux_p;
+    wire aux_n;
+
     dp_tx_top dut (
         .clk             (clk),
         .pixel_clk       (pixel_clk),
@@ -68,7 +72,9 @@ module dp_tx_top_tb;
         .aux_resp_valid  (aux_resp_valid),
         .aux_resp_ack    (aux_resp_ack),
         .aux_resp_data   (aux_resp_data),
-        .aux_resp_code   (aux_resp_code)
+        .aux_resp_code   (aux_resp_code),
+        .aux_p           (aux_p),
+        .aux_n           (aux_n)
     );
 
     always #5 clk = ~clk;

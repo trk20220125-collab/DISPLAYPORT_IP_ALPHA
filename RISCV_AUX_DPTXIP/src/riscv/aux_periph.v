@@ -50,6 +50,15 @@ module aux_periph (
 
     integer i;
 
+    // PHY TX state machine
+    localparam [2:0] PHY_TX_IDLE    = 3'd0;
+    localparam [2:0] PHY_TX_WAIT_RDY = 3'd1;
+    localparam [2:0] PHY_TX_SEND    = 3'd2;
+    localparam [2:0] PHY_TX_DONE    = 3'd3;
+
+    reg [2:0] phy_tx_state;
+    reg       phy_tx_triggered;
+
     // DPCD memory initialization
     initial begin
         for (i = 0; i < 256; i = i + 1)
@@ -100,6 +109,57 @@ module aux_periph (
                 aux_resp_data  <= resp_data_reg;
                 aux_resp_code  <= resp_code_reg;
             end
+        end
+    end
+
+    // PHY TX state machine - drives response to PHY when firmware sets resp_ready
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            phy_tx_state     <= PHY_TX_IDLE;
+            phy_tx_start     <= 1'b0;
+            phy_tx_data      <= 8'h00;
+            phy_tx_last      <= 1'b0;
+            phy_tx_triggered <= 1'b0;
+        end else begin
+            phy_tx_start <= 1'b0;
+
+            case (phy_tx_state)
+                PHY_TX_IDLE: begin
+                    // Wait for firmware to set resp_ready (via AUX_CTRL write)
+                    if (resp_ready && !phy_tx_triggered) begin
+                        phy_tx_triggered <= 1'b1;
+                        phy_tx_state <= PHY_TX_WAIT_RDY;
+                    end else if (!resp_ready) begin
+                        phy_tx_triggered <= 1'b0;
+                    end
+                end
+
+                PHY_TX_WAIT_RDY: begin
+                    if (phy_tx_ready) begin
+                        // Send response code first
+                        phy_tx_start <= 1'b1;
+                        phy_tx_data  <= resp_code_reg;
+                        phy_tx_last  <= 1'b0;
+                        phy_tx_state <= PHY_TX_SEND;
+                    end
+                end
+
+                PHY_TX_SEND: begin
+                    if (phy_tx_done) begin
+                        // Send response data
+                        phy_tx_start <= 1'b1;
+                        phy_tx_data  <= resp_data_reg;
+                        phy_tx_last  <= 1'b1;
+                        phy_tx_state <= PHY_TX_DONE;
+                    end
+                end
+
+                PHY_TX_DONE: begin
+                    if (phy_tx_done) begin
+                        phy_tx_state <= PHY_TX_IDLE;
+                    end
+                end
+            endcase
         end
     end
 

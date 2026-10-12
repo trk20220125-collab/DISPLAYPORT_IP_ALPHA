@@ -45,6 +45,7 @@ def run_simulation(waves=False):
         os.path.join(SRC_DIR, "dp_tx_msa_gen.v"),
         os.path.join(SRC_DIR, "dp_tx_stream_mux.v"),
         os.path.join(SRC_DIR, "dp_tx_lane_mapper.v"),
+        os.path.join(SRC_DIR, "dp_tx_aux_phy.v"),
         os.path.join(SRC_DIR, "dp_tx_phy_7series.v"),
         os.path.join(RISCV_DIR, "picorv32.v"),
         os.path.join(RISCV_DIR, "ram.v"),

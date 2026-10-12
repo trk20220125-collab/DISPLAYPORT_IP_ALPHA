@@ -2,26 +2,32 @@ module riscv_soc (
     input  wire        clk,
     input  wire        rst_n,
 
-    // Host AUX interface
+    // Host AUX interface (DP 1.2 native AUX)
     input  wire        aux_req_valid,
-    input  wire [7:0]  aux_req_opcode,
-    input  wire [7:0]  aux_req_addr_hi,
-    input  wire [7:0]  aux_req_addr_lo,
+    input  wire [1:0]  aux_req_type,
+    input  wire [19:0] aux_req_addr,
     input  wire [7:0]  aux_req_len,
     input  wire [7:0]  aux_req_data,
+    input  wire        aux_req_data_valid,
+    input  wire        aux_req_last,
     output wire        aux_busy,
     output wire        aux_resp_valid,
-    output wire        aux_resp_ack,
+    output wire [1:0]  aux_resp_reply,
     output wire [7:0]  aux_resp_data,
-    output wire [7:0]  aux_resp_code,
+    output wire        aux_resp_last,
 
     // AUX PHY interface
     output wire        phy_tx_start,
+    output wire [1:0]  phy_tx_type,
+    output wire [19:0] phy_tx_addr,
+    output wire [7:0]  phy_tx_len,
     output wire [7:0]  phy_tx_data,
+    output wire        phy_tx_data_valid,
     output wire        phy_tx_last,
     input  wire        phy_tx_ready,
     input  wire        phy_tx_done,
     input  wire        phy_rx_valid,
+    input  wire [1:0]  phy_rx_reply,
     input  wire [7:0]  phy_rx_data,
     input  wire        phy_rx_last,
     input  wire        phy_rx_err
@@ -42,8 +48,8 @@ module riscv_soc (
     wire [31:0] ram_rdata;
 
     // Address decoding
-    wire ram_sel    = (mem_addr[31:28] == 4'h0);   // 0x00000000 - 0x0FFFFFFF
-    wire periph_sel = (mem_addr[31:28] == 4'h1);   // 0x10000000 - 0x1FFFFFFF
+    wire ram_sel    = (mem_addr[31:13] == 19'h0);     // 8KB @ 0x0000_0000
+    wire periph_sel = (mem_addr[31:12] == 20'h10000); // 4KB @ 0x1000_0000
 
     // Memory ready: one cycle for RAM, one cycle for peripherals
     reg mem_ready_reg;
@@ -91,34 +97,40 @@ module riscv_soc (
     );
 
     aux_periph aux_peripheral (
-        .clk             (clk),
-        .rst_n           (rst_n),
-        .aux_req_valid   (aux_req_valid),
-        .aux_req_opcode  (aux_req_opcode),
-        .aux_req_addr_hi (aux_req_addr_hi),
-        .aux_req_addr_lo (aux_req_addr_lo),
-        .aux_req_len     (aux_req_len),
-        .aux_req_data    (aux_req_data),
-        .aux_busy        (aux_busy),
-        .aux_resp_valid  (aux_resp_valid),
-        .aux_resp_ack    (aux_resp_ack),
-        .aux_resp_data   (aux_resp_data),
-        .aux_resp_code   (aux_resp_code),
-        .cpu_valid       (periph_valid),
-        .cpu_addr        (mem_addr),
-        .cpu_wdata       (mem_wdata),
-        .cpu_wstrb       (mem_wstrb),
-        .cpu_rdata       (periph_rdata),
+        .clk                  (clk),
+        .rst_n                (rst_n),
+        .aux_req_valid        (aux_req_valid),
+        .aux_req_type         (aux_req_type),
+        .aux_req_addr         (aux_req_addr),
+        .aux_req_len          (aux_req_len),
+        .aux_req_data         (aux_req_data),
+        .aux_req_data_valid   (aux_req_data_valid),
+        .aux_req_last         (aux_req_last),
+        .aux_busy             (aux_busy),
+        .aux_resp_valid       (aux_resp_valid),
+        .aux_resp_reply       (aux_resp_reply),
+        .aux_resp_data        (aux_resp_data),
+        .aux_resp_last        (aux_resp_last),
+        .cpu_valid            (periph_valid),
+        .cpu_addr             (mem_addr),
+        .cpu_wdata            (mem_wdata),
+        .cpu_wstrb            (mem_wstrb),
+        .cpu_rdata            (periph_rdata),
         // PHY interface
-        .phy_tx_start    (phy_tx_start),
-        .phy_tx_data     (phy_tx_data),
-        .phy_tx_last     (phy_tx_last),
-        .phy_tx_ready    (phy_tx_ready),
-        .phy_tx_done     (phy_tx_done),
-        .phy_rx_valid    (phy_rx_valid),
-        .phy_rx_data     (phy_rx_data),
-        .phy_rx_last     (phy_rx_last),
-        .phy_rx_err      (phy_rx_err)
+        .phy_tx_start         (phy_tx_start),
+        .phy_tx_type          (phy_tx_type),
+        .phy_tx_addr          (phy_tx_addr),
+        .phy_tx_len           (phy_tx_len),
+        .phy_tx_data          (phy_tx_data),
+        .phy_tx_data_valid    (phy_tx_data_valid),
+        .phy_tx_last          (phy_tx_last),
+        .phy_tx_ready         (phy_tx_ready),
+        .phy_tx_done          (phy_tx_done),
+        .phy_rx_valid         (phy_rx_valid),
+        .phy_rx_reply         (phy_rx_reply),
+        .phy_rx_data          (phy_rx_data),
+        .phy_rx_last          (phy_rx_last),
+        .phy_rx_err           (phy_rx_err)
     );
 
 endmodule

@@ -2,18 +2,19 @@ module aux_periph (
     input  wire        clk,
     input  wire        rst_n,
 
-    // Host AUX interface (same as original aux_ctrl)
+    // Host AUX interface (DP 1.2 native AUX)
     input  wire        aux_req_valid,
-    input  wire [7:0]  aux_req_opcode,
-    input  wire [7:0]  aux_req_addr_hi,
-    input  wire [7:0]  aux_req_addr_lo,
-    input  wire [7:0]  aux_req_len,
-    input  wire [7:0]  aux_req_data,
+    input  wire [1:0]  aux_req_type,     // 00=WRITE, 01=READ, 10=I2C_WRITE, 11=I2C_READ
+    input  wire [19:0] aux_req_addr,     // 20-bit address
+    input  wire [7:0]  aux_req_len,      // Length-1 (0-15)
+    input  wire [7:0]  aux_req_data,     // Write data byte
+    input  wire        aux_req_data_valid,
+    input  wire        aux_req_last,
     output reg         aux_busy,
     output reg         aux_resp_valid,
-    output reg         aux_resp_ack,
+    output reg [1:0]   aux_resp_reply,   // 00=ACK, 01=NACK, 10=DEFER
     output reg [7:0]   aux_resp_data,
-    output reg [7:0]   aux_resp_code,
+    output reg         aux_resp_last,
 
     // RISC-V memory slave interface
     input  wire        cpu_valid,
@@ -24,11 +25,16 @@ module aux_periph (
 
     // AUX PHY interface
     output reg         phy_tx_start,
-    output reg  [7:0]  phy_tx_data,
+    output reg [1:0]   phy_tx_type,
+    output reg [19:0]  phy_tx_addr,
+    output reg [7:0]   phy_tx_len,
+    output reg [7:0]   phy_tx_data,
+    output reg         phy_tx_data_valid,
     output reg         phy_tx_last,
     input  wire        phy_tx_ready,
     input  wire        phy_tx_done,
     input  wire        phy_rx_valid,
+    input  wire [1:0]  phy_rx_reply,
     input  wire [7:0]  phy_rx_data,
     input  wire        phy_rx_last,
     input  wire        phy_rx_err
@@ -36,15 +42,16 @@ module aux_periph (
 
     reg  req_pending;
     reg  resp_ready;
-    reg  resp_ack_reg;
-    reg [7:0] resp_code_reg;
+    reg [1:0] resp_reply_reg;
     reg [7:0] resp_data_reg;
+    reg       resp_last_reg;
 
-    reg [7:0] host_opcode;
-    reg [7:0] host_addr_hi;
-    reg [7:0] host_addr_lo;
-    reg [7:0] host_len;
-    reg [7:0] host_wdata;
+    reg [1:0]  host_type;
+    reg [19:0] host_addr;
+    reg [7:0]  host_len;
+    reg [7:0]  host_wdata;
+    reg        host_wdata_valid;
+    reg        host_last;
 
     reg [7:0] dpcd_mem [0:255];
 
@@ -52,21 +59,23 @@ module aux_periph (
 
     // PHY TX state machine
     localparam [2:0] PHY_TX_IDLE    = 3'd0;
-    localparam [2:0] PHY_TX_WAIT_RDY = 3'd1;
-    localparam [2:0] PHY_TX_SEND    = 3'd2;
+    localparam [2:0] PHY_TX_CMD     = 3'd1;
+    localparam [2:0] PHY_TX_DATA    = 3'd2;
     localparam [2:0] PHY_TX_DONE    = 3'd3;
 
     reg [2:0] phy_tx_state;
     reg       phy_tx_triggered;
+    reg [7:0] phy_tx_byte_cnt;
+    reg [7:0] phy_tx_total_bytes;
 
     // DPCD memory initialization
     initial begin
         for (i = 0; i < 256; i = i + 1)
             dpcd_mem[i] = 8'h00;
-        dpcd_mem[0] = 8'h01;
-        dpcd_mem[1] = 8'h02;
-        dpcd_mem[2] = 8'h03;
-        dpcd_mem[3] = 8'h04;
+        dpcd_mem[0] = 8'h01;  // DPCD_REV
+        dpcd_mem[1] = 8'h02;  // MAX_LINK_RATE
+        dpcd_mem[2] = 8'h03;  // MAX_LANE_COUNT
+        dpcd_mem[3] = 8'h04;  // MAX_DOWNSPREAD
     end
 
     // Host request capture
@@ -76,26 +85,28 @@ module aux_periph (
             resp_ready  <= 1'b0;
             aux_busy    <= 1'b0;
             aux_resp_valid <= 1'b0;
-            aux_resp_ack   <= 1'b0;
+            aux_resp_reply <= 2'd0;
             aux_resp_data  <= 8'h00;
-            aux_resp_code  <= 8'h00;
-            host_opcode <= 8'h00;
-            host_addr_hi <= 8'h00;
-            host_addr_lo <= 8'h00;
-            host_len     <= 8'h00;
-            host_wdata   <= 8'h00;
-            resp_ack_reg <= 1'b0;
-            resp_code_reg <= 8'h00;
+            aux_resp_last  <= 1'b0;
+            host_type <= 2'd0;
+            host_addr <= 20'd0;
+            host_len  <= 8'd0;
+            host_wdata <= 8'h00;
+            host_wdata_valid <= 1'b0;
+            host_last <= 1'b0;
+            resp_reply_reg <= 2'd0;
             resp_data_reg <= 8'h00;
+            resp_last_reg <= 1'b0;
         end else begin
             aux_resp_valid <= 1'b0;
 
             if (aux_req_valid && !req_pending && !aux_busy) begin
-                host_opcode <= aux_req_opcode;
-                host_addr_hi <= aux_req_addr_hi;
-                host_addr_lo <= aux_req_addr_lo;
-                host_len     <= aux_req_len;
-                host_wdata   <= aux_req_data;
+                host_type <= aux_req_type;
+                host_addr <= aux_req_addr;
+                host_len  <= aux_req_len;
+                host_wdata <= aux_req_data;
+                host_wdata_valid <= aux_req_data_valid;
+                host_last <= aux_req_last;
                 req_pending  <= 1'b1;
                 aux_busy     <= 1'b1;
             end
@@ -105,52 +116,65 @@ module aux_periph (
                 req_pending   <= 1'b0;
                 aux_busy      <= 1'b0;
                 aux_resp_valid <= 1'b1;
-                aux_resp_ack   <= resp_ack_reg;
+                aux_resp_reply <= resp_reply_reg;
                 aux_resp_data  <= resp_data_reg;
-                aux_resp_code  <= resp_code_reg;
+                aux_resp_last  <= resp_last_reg;
             end
         end
     end
 
-    // PHY TX state machine - drives response to PHY when firmware sets resp_ready
+    // PHY TX state machine - formats and sends DP 1.2 transaction
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            phy_tx_state     <= PHY_TX_IDLE;
-            phy_tx_start     <= 1'b0;
-            phy_tx_data      <= 8'h00;
-            phy_tx_last      <= 1'b0;
-            phy_tx_triggered <= 1'b0;
+            phy_tx_state       <= PHY_TX_IDLE;
+            phy_tx_start       <= 1'b0;
+            phy_tx_type        <= 2'd0;
+            phy_tx_addr        <= 20'd0;
+            phy_tx_len         <= 8'd0;
+            phy_tx_data        <= 8'h00;
+            phy_tx_data_valid  <= 1'b0;
+            phy_tx_last        <= 1'b0;
+            phy_tx_triggered   <= 1'b0;
+            phy_tx_byte_cnt    <= 8'd0;
+            phy_tx_total_bytes <= 8'd0;
         end else begin
             phy_tx_start <= 1'b0;
+            phy_tx_data_valid <= 1'b0;
 
             case (phy_tx_state)
                 PHY_TX_IDLE: begin
-                    // Wait for firmware to set resp_ready (via AUX_CTRL write)
                     if (resp_ready && !phy_tx_triggered) begin
                         phy_tx_triggered <= 1'b1;
-                        phy_tx_state <= PHY_TX_WAIT_RDY;
+                        phy_tx_type    <= host_type;
+                        phy_tx_addr    <= host_addr;
+                        phy_tx_len     <= host_len;
+                        phy_tx_total_bytes <= host_len + 1;
+                        phy_tx_byte_cnt <= 8'd0;
+                        phy_tx_state   <= PHY_TX_CMD;
                     end else if (!resp_ready) begin
                         phy_tx_triggered <= 1'b0;
                     end
                 end
 
-                PHY_TX_WAIT_RDY: begin
+                PHY_TX_CMD: begin
                     if (phy_tx_ready) begin
-                        // Send response code first
                         phy_tx_start <= 1'b1;
-                        phy_tx_data  <= resp_code_reg;
-                        phy_tx_last  <= 1'b0;
-                        phy_tx_state <= PHY_TX_SEND;
+                        phy_tx_state <= PHY_TX_DATA;
+                        phy_tx_byte_cnt <= 8'd0;
                     end
                 end
 
-                PHY_TX_SEND: begin
-                    if (phy_tx_done) begin
-                        // Send response data
-                        phy_tx_start <= 1'b1;
-                        phy_tx_data  <= resp_data_reg;
-                        phy_tx_last  <= 1'b1;
-                        phy_tx_state <= PHY_TX_DONE;
+                PHY_TX_DATA: begin
+                    if (phy_tx_ready) begin
+                        if (phy_tx_byte_cnt < phy_tx_total_bytes) begin
+                            phy_tx_start <= 1'b1;
+                            phy_tx_data <= dpcd_mem[phy_tx_addr + phy_tx_byte_cnt];
+                            phy_tx_data_valid <= 1'b1;
+                            phy_tx_last <= (phy_tx_byte_cnt == phy_tx_total_bytes - 1);
+                            phy_tx_byte_cnt <= phy_tx_byte_cnt + 1;
+                        end else begin
+                            phy_tx_state <= PHY_TX_DONE;
+                        end
                     end
                 end
 
@@ -160,6 +184,20 @@ module aux_periph (
                     end
                 end
             endcase
+        end
+    end
+
+    // RX from PHY - capture reply
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            resp_reply_reg <= 2'd0;
+            resp_data_reg <= 8'h00;
+            resp_last_reg <= 1'b0;
+        end else if (phy_rx_valid) begin
+            resp_reply_reg <= phy_rx_reply;
+            resp_data_reg <= phy_rx_data;
+            resp_last_reg <= phy_rx_last;
+            resp_ready <= 1'b1;
         end
     end
 
@@ -173,53 +211,45 @@ module aux_periph (
         if (cpu_valid && cpu_wstrb == 4'b0000 && cpu_addr[11:0] == 12'h000)
             $display("AUX_CTRL  read req_pending=%b", req_pending);
         if (cpu_valid && cpu_wstrb != 4'b0000 && cpu_addr[11:0] == 12'h000)
-            $display("AUX_CTRL  write val=0x%08X (resp_ready=%b ack=%b)", cpu_wdata, cpu_wdata[1], cpu_wdata[2]);
-        if (cpu_valid && cpu_wstrb == 4'b0000 && cpu_addr[11:0] == 12'h004)
-            $display("AUX_REQ   read opcode=0x%02X addr_hi=0x%02X addr_lo=0x%02X len=0x%02X",
-                     cpu_rdata[31:24], cpu_rdata[23:16], cpu_rdata[15:8], cpu_rdata[7:0]);
-        if (cpu_valid && cpu_wstrb == 4'b0000 && cpu_addr[11:0] == 12'h008)
-            $display("AUX_WDATA read data=0x%02X", host_wdata);
-        if (cpu_valid && cpu_wstrb != 4'b0000 && cpu_addr[11:0] == 12'h010)
-            $display("AUX_RESP  write data=0x%02X", cpu_wdata[7:0]);
+            $display("AUX_CTRL  write val=0x%08X (resp_ready=%b)", cpu_wdata, cpu_wdata[1]);
     end
     `endif
     // synthesis translate_on
 
     // RISC-V CPU register interface
-    // Address map (word-aligned):
-    // 0x00: AUX_CTRL      (RW) [0]=req_pending(RO), [1]=resp_ready(WO), [2]=ack(WO)
-    // 0x04: AUX_REQ_OPADDR (RO) {opcode, addr_hi, addr_lo, len}
-    // 0x08: AUX_REQ_WDATA  (RO) write data from host
-    // 0x0C: AUX_RESP_CTRL  (WO) {code[7:0], ack, reserved}
-    // 0x10: AUX_RESP_DATA  (WO) response data byte
-    // 0x100-0x1FF: DPCD memory (256 bytes, word-aligned access)
+    // Address map:
+    // 0x00: AUX_CTRL      (RW) [0]=req_pending(RO), [1]=resp_ready(WO)
+    // 0x04: AUX_REQ_TYPE  (RO) {6'h0, type[1:0]}
+    // 0x08: AUX_REQ_ADDR  (RO) 20-bit address
+    // 0x0C: AUX_REQ_LEN   (RO) length-1
+    // 0x10: AUX_REQ_WDATA (RO) write data
+    // 0x14: AUX_RESP_REPLY (WO) reply code
+    // 0x18: AUX_RESP_DATA (WO) response data
+    // 0x100-0x1FF: DPCD memory (256 bytes)
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             cpu_rdata <= 32'h00000000;
-            resp_ack_reg <= 1'b0;
-            resp_code_reg <= 8'h00;
-            resp_data_reg <= 8'h00;
         end else begin
             if (cpu_valid) begin
                 if (cpu_wstrb == 4'b0000) begin
                     case (cpu_addr[11:0])
-                        12'h000: cpu_rdata <= { 28'h0000000, req_pending };
-                        12'h004: cpu_rdata <= { host_opcode, host_addr_hi, host_addr_lo, host_len };
-                        12'h008: cpu_rdata <= { 24'h000000, host_wdata };
+                        12'h000: cpu_rdata <= { 30'h00000000, req_pending };
+                        12'h004: cpu_rdata <= { 30'h00000000, host_type };
+                        12'h008: cpu_rdata <= { 12'h000, host_addr };
+                        12'h00C: cpu_rdata <= { 24'h000000, host_len };
+                        12'h010: cpu_rdata <= { 24'h000000, host_wdata };
                         default: cpu_rdata <= 32'h00000000;
                     endcase
                 end else begin
                     case (cpu_addr[11:0])
                         12'h000: begin
                             if (cpu_wstrb[0]) resp_ready <= cpu_wdata[1];
-                            if (cpu_wstrb[0]) resp_ack_reg <= cpu_wdata[2];
                         end
-                        12'h00C: begin
-                            if (cpu_wstrb[0]) resp_code_reg <= cpu_wdata[7:0];
-                            if (cpu_wstrb[1]) resp_ack_reg <= cpu_wdata[15];
+                        12'h014: begin
+                            if (cpu_wstrb[0]) resp_reply_reg <= cpu_wdata[1:0];
                         end
-                        12'h010: begin
+                        12'h018: begin
                             if (cpu_wstrb[0]) resp_data_reg <= cpu_wdata[7:0];
                         end
                     endcase

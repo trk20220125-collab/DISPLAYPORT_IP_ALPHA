@@ -7,11 +7,12 @@ module dp_tx_top (
     input  wire        pixel_valid,
     input  wire        pixel_sof,
     input  wire        aux_req_valid,
-    input  wire [7:0]  aux_req_opcode,
-    input  wire [7:0]  aux_req_addr_hi,
-    input  wire [7:0]  aux_req_addr_lo,
-    input  wire [7:0]  aux_req_len,
-    input  wire [7:0]  aux_req_data,
+    input  wire [1:0]  aux_req_type,     // 00=WRITE, 01=READ, 10=I2C_WRITE, 11=I2C_READ
+    input  wire [19:0] aux_req_addr,     // 20-bit address
+    input  wire [7:0]  aux_req_len,      // Length-1 (0-15)
+    input  wire [7:0]  aux_req_data,     // Write data byte
+    input  wire        aux_req_data_valid,
+    input  wire        aux_req_last,
     input  wire [15:0] h_active,
     input  wire [15:0] v_active,
     input  wire [15:0] h_total,
@@ -28,9 +29,9 @@ module dp_tx_top (
     output wire [3:0]  txn,
     output wire        aux_busy,
     output wire        aux_resp_valid,
-    output wire        aux_resp_ack,
+    output wire [1:0]  aux_resp_reply,   // 00=ACK, 01=NACK, 10=DEFER
     output wire [7:0]  aux_resp_data,
-    output wire [7:0]  aux_resp_code,
+    output wire        aux_resp_last,
     output wire        pixel_ready,
 
     // AUX PHY differential pins
@@ -195,55 +196,71 @@ module dp_tx_top (
     );
 
     wire        aux_phy_tx_start;
+    wire [1:0]  aux_phy_tx_type;
+    wire [19:0] aux_phy_tx_addr;
+    wire [7:0]  aux_phy_tx_len;
     wire [7:0]  aux_phy_tx_data;
+    wire        aux_phy_tx_data_valid;
     wire        aux_phy_tx_last;
     wire        aux_phy_tx_ready;
     wire        aux_phy_tx_done;
     wire        aux_phy_rx_valid;
+    wire [1:0]  aux_phy_rx_reply;
     wire [7:0]  aux_phy_rx_data;
     wire        aux_phy_rx_last;
     wire        aux_phy_rx_err;
 
     riscv_soc riscv_aux_ctrl (
-        .clk             (clk),
-        .rst_n           (rst_n),
-        .aux_req_valid   (aux_req_valid),
-        .aux_req_opcode  (aux_req_opcode),
-        .aux_req_addr_hi (aux_req_addr_hi),
-        .aux_req_addr_lo (aux_req_addr_lo),
-        .aux_req_len     (aux_req_len),
-        .aux_req_data    (aux_req_data),
-        .aux_busy        (aux_busy),
-        .aux_resp_valid  (aux_resp_valid),
-        .aux_resp_ack    (aux_resp_ack),
-        .aux_resp_data   (aux_resp_data),
-        .aux_resp_code   (aux_resp_code),
+        .clk               (clk),
+        .rst_n             (rst_n),
+        .aux_req_valid     (aux_req_valid),
+        .aux_req_type      (aux_req_type),
+        .aux_req_addr      (aux_req_addr),
+        .aux_req_len       (aux_req_len),
+        .aux_req_data      (aux_req_data),
+        .aux_req_data_valid(aux_req_data_valid),
+        .aux_req_last      (aux_req_last),
+        .aux_busy          (aux_busy),
+        .aux_resp_valid    (aux_resp_valid),
+        .aux_resp_reply    (aux_resp_reply),
+        .aux_resp_data     (aux_resp_data),
+        .aux_resp_last     (aux_resp_last),
         // PHY interface
-        .phy_tx_start    (aux_phy_tx_start),
-        .phy_tx_data     (aux_phy_tx_data),
-        .phy_tx_last     (aux_phy_tx_last),
-        .phy_tx_ready    (aux_phy_tx_ready),
-        .phy_tx_done     (aux_phy_tx_done),
-        .phy_rx_valid    (aux_phy_rx_valid),
-        .phy_rx_data     (aux_phy_rx_data),
-        .phy_rx_last     (aux_phy_rx_last),
-        .phy_rx_err      (aux_phy_rx_err)
+        .phy_tx_start      (aux_phy_tx_start),
+        .phy_tx_type       (aux_phy_tx_type),
+        .phy_tx_addr       (aux_phy_tx_addr),
+        .phy_tx_len        (aux_phy_tx_len),
+        .phy_tx_data       (aux_phy_tx_data),
+        .phy_tx_data_valid (aux_phy_tx_data_valid),
+        .phy_tx_last       (aux_phy_tx_last),
+        .phy_tx_ready      (aux_phy_tx_ready),
+        .phy_tx_done       (aux_phy_tx_done),
+        .phy_rx_valid      (aux_phy_rx_valid),
+        .phy_rx_reply      (aux_phy_rx_reply),
+        .phy_rx_data       (aux_phy_rx_data),
+        .phy_rx_last       (aux_phy_rx_last),
+        .phy_rx_err        (aux_phy_rx_err)
     );
 
     dp_tx_aux_phy aux_phy_inst (
-        .sys_clk       (clk),
-        .sys_rst_n     (rst_n),
-        .tx_start      (aux_phy_tx_start),
-        .tx_data       (aux_phy_tx_data),
-        .tx_last       (aux_phy_tx_last),
-        .tx_ready      (aux_phy_tx_ready),
-        .tx_done       (aux_phy_tx_done),
-        .rx_valid      (aux_phy_rx_valid),
-        .rx_data       (aux_phy_rx_data),
-        .rx_last       (aux_phy_rx_last),
-        .rx_err        (aux_phy_rx_err),
-        .aux_p         (aux_p),
-        .aux_n         (aux_n)
+        .sys_clk           (clk),
+        .sys_rst_n         (rst_n),
+        .tx_start          (aux_phy_tx_start),
+        .tx_type           (aux_phy_tx_type),
+        .tx_addr           (aux_phy_tx_addr),
+        .tx_len            (aux_phy_tx_len),
+        .tx_data           (aux_phy_tx_data),
+        .tx_data_valid     (aux_phy_tx_data_valid),
+        .tx_last           (aux_phy_tx_last),
+        .tx_ready          (aux_phy_tx_ready),
+        .tx_done           (aux_phy_tx_done),
+        .rx_valid          (aux_phy_rx_valid),
+        .rx_reply_code     (aux_phy_rx_reply),
+        .rx_data           (aux_phy_rx_data),
+        .rx_last           (aux_phy_rx_last),
+        .rx_err            (aux_phy_rx_err),
+        .aux_p             (aux_p),
+        .aux_n             (aux_n)
     );
 
     dp_tx_lane_mapper #(.LANE_COUNT(4)) lane_map (
